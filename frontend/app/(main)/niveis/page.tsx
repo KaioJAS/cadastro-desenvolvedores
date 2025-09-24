@@ -9,6 +9,7 @@ import { Toolbar } from 'primereact/toolbar';
 import { classNames } from 'primereact/utils';
 import React, { useEffect, useRef, useState } from 'react';
 import { Nivel } from '@/types/nivel'
+import { NivelService } from '@/services/NivelService'
 
 const Crud = () => {
     let emptyNivel: Nivel = {
@@ -22,16 +23,22 @@ const Crud = () => {
     const [nivel, setNivel] = useState<Nivel>(emptyNivel);
     const [submitted, setSubmitted] = useState(false);
     const [globalFilter, setGlobalFilter] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [totalRecords, setTotalRecords] = useState(0);
     const toast = useRef<Toast>(null);
     const dt = useRef<DataTable<any>>(null);
 
     useEffect(() => {
-        setNiveis([
-            { id: 1, nivel: "Junior"},
-            { id: 2, nivel: "Pleno"},
-            { id: 3, nivel: "Senior"},
-        ])
-    }, []);
+        NivelService.getNiveis(globalFilter, currentPage, rowsPerPage)
+            .then((response) => {
+                setNiveis(response.data);
+                setTotalRecords(response.total);
+            })
+            .catch((error) => {
+                console.log("deu ruim", error);
+            })
+    }, [globalFilter, currentPage, rowsPerPage]);
 
 
     const openNew = () => {
@@ -53,30 +60,38 @@ const Crud = () => {
         setSubmitted(true);
 
         if (nivel.nivel.trim()) {
-            let _nivels = [...(niveis as any)];
-            let _nivel = { ...nivel };
             if (nivel.id) {
-                const index = findIndexById(nivel.id);
-
-                _nivels[index] = _nivel;
-                toast.current?.show({
-                    severity: 'success',
-                    summary: 'Sucesso',
-                    detail: 'Nível Atualizado',
-                    life: 3000
-                });
+                NivelService.updateNivel(nivel.id, { nivel: nivel.nivel })
+                    .then(() => {
+                        toast.current?.show({
+                            severity: 'success',
+                            summary: 'Sucesso',
+                            detail: 'Nível Atualizado',
+                            life: 3000
+                        });
+                        NivelService.getNiveis(globalFilter, currentPage, rowsPerPage)
+                            .then((response) => {
+                                setNiveis(response.data);
+                                setTotalRecords(response.total);
+                            });
+                    });
             } else {
-                _nivel.id = Date.now();
-                _nivels.push(_nivel);
-                toast.current?.show({
-                    severity: 'success',
-                    summary: 'Sucesso',
-                    detail: 'Nivel Criado',
-                    life: 3000
-                });
+                NivelService.createNivel({ nivel: nivel.nivel })
+                    .then(() => {
+                        toast.current?.show({
+                            severity: 'success',
+                            summary: 'Sucesso',
+                            detail: 'Nível Criado',
+                            life: 3000
+                        });
+                        NivelService.getNiveis(globalFilter, currentPage, rowsPerPage)
+                            .then((response) => {
+                                setNiveis(response.data);
+                                setTotalRecords(response.total);
+                            });
+                    });
             }
 
-            setNiveis(_nivels as any);
             setNivelDialog(false);
             setNivel(emptyNivel);
         }
@@ -93,28 +108,19 @@ const Crud = () => {
     };
 
     const deleteNivel = () => {
-        let _nivels = (niveis as any)?.filter((val: any) => val.id !== nivel.id);
-        setNiveis(_nivels);
-        setDeleteNivelDialog(false);
-        setNivel(emptyNivel);
-        toast.current?.show({
-            severity: 'success',
-            summary: 'Sucesso',
-            detail: 'Nível Excluido',
-            life: 3000
-        });
-    };
-
-    const findIndexById = (id: number) => {
-        let index = -1;
-        for (let i = 0; i < (niveis as any)?.length; i++) {
-            if ((niveis as any)[i].id === id) {
-                index = i;
-                break;
-            }
-        }
-
-        return index;
+        NivelService.deleteNivel(nivel.id)
+            .then(() => {
+                let _nivels = (niveis as any)?.filter((val: any) => val.id !== nivel.id);
+                setNiveis(_nivels);
+                setDeleteNivelDialog(false);
+                setNivel(emptyNivel);
+                toast.current?.show({
+                    severity: 'success',
+                    summary: 'Sucesso',
+                    detail: 'Nível Excluido',
+                    life: 3000
+                });
+            });
     };
 
     const onInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, name: string) => {
@@ -188,12 +194,15 @@ const Crud = () => {
                         value={niveis}
                         dataKey="id"
                         paginator
-                        rows={10}
+                        rows={rowsPerPage}
                         rowsPerPageOptions={[5, 10, 25]}
+                        totalRecords={totalRecords}
+                        lazy
+                        first={(currentPage - 1) * rowsPerPage}
+                        onPage={(e) => {setCurrentPage(e.page + 1); setRowsPerPage(e.rows);}}
                         className="datatable-responsive"
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                         currentPageReportTemplate="Mostrar {first} de {last} com {totalRecords} niveis"
-                        globalFilter={globalFilter}
                         emptyMessage="Nenhum nível encontrado."
                         header={header}
                         responsiveLayout="stack"

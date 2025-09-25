@@ -19,7 +19,7 @@ const AppMenu = () => {
             label: 'Cadastros',
             items: [
                 { label: 'Níveis', icon: 'pi pi-fw pi-sitemap', to: '/niveis' },
-                { label: 'Desenvolvedoores', icon: 'pi pi-fw pi-users', to: '/desenvolvedores' },
+                { label: 'Desenvolvedores', icon: 'pi pi-fw pi-users', to: '/desenvolvedores' },
             ]
         }
     ];

@@ -1,393 +1,355 @@
-/* eslint-disable @next/next/no-img-element */
 'use client';
 import { Button } from 'primereact/button';
-import { Chart } from 'primereact/chart';
 import { Column } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
-import { Menu } from 'primereact/menu';
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import { ProductService } from '@/demo/service/ProductService';
-import { LayoutContext } from '@/layout/context/layoutcontext';
-import Link from 'next/link';
-import { Demo } from '@/types';
-import { ChartData, ChartOptions } from 'chart.js';
+import { Dialog } from 'primereact/dialog';
+import { InputText } from 'primereact/inputtext';
+import { Toast } from 'primereact/toast';
+import { Toolbar } from 'primereact/toolbar';
+import { classNames } from 'primereact/utils';
+import React, { useEffect, useRef, useState } from 'react';
+import { Desenvolvedor } from '@/types/desenvolvedor';
+import { Nivel } from '@/types/nivel';
+import { DesenvolvedorService } from '@/services/DesenvolvedorService'
+import { NivelService } from '@/services/NivelService';
+import { Dropdown } from 'primereact/dropdown';
+import { Calendar } from 'primereact/calendar';
 
-const lineData: ChartData = {
-    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-    datasets: [
-        {
-            label: 'First Dataset',
-            data: [65, 59, 80, 81, 56, 55, 40],
-            fill: false,
-            backgroundColor: '#2f4860',
-            borderColor: '#2f4860',
-            tension: 0.4
-        },
-        {
-            label: 'Second Dataset',
-            data: [28, 48, 40, 19, 86, 27, 90],
-            fill: false,
-            backgroundColor: '#00bb7e',
-            borderColor: '#00bb7e',
-            tension: 0.4
-        }
-    ]
-};
-
-const Dashboard = () => {
-    const [products, setProducts] = useState<Demo.Product[]>([]);
-    const menu1 = useRef<Menu>(null);
-    const menu2 = useRef<Menu>(null);
-    const [lineOptions, setLineOptions] = useState<ChartOptions>({});
-    const { layoutConfig } = useContext(LayoutContext);
-
-    const applyLightTheme = () => {
-        const lineOptions: ChartOptions = {
-            plugins: {
-                legend: {
-                    labels: {
-                        color: '#495057'
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    ticks: {
-                        color: '#495057'
-                    },
-                    grid: {
-                        color: '#ebedef'
-                    }
-                },
-                y: {
-                    ticks: {
-                        color: '#495057'
-                    },
-                    grid: {
-                        color: '#ebedef'
-                    }
-                }
-            }
-        };
-
-        setLineOptions(lineOptions);
+const Crud = () => {
+    let emptyDesenvolvedor: Desenvolvedor = {
+        id: 0,
+        nivel_id: 0,
+        nome: '',
+        sexo: '',
+        data_nascimento: '',
+        hobby: ''
     };
 
-    const applyDarkTheme = () => {
-        const lineOptions = {
-            plugins: {
-                legend: {
-                    labels: {
-                        color: '#ebedef'
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    ticks: {
-                        color: '#ebedef'
-                    },
-                    grid: {
-                        color: 'rgba(160, 167, 181, .3)'
-                    }
-                },
-                y: {
-                    ticks: {
-                        color: '#ebedef'
-                    },
-                    grid: {
-                        color: 'rgba(160, 167, 181, .3)'
-                    }
-                }
-            }
-        };
-
-        setLineOptions(lineOptions);
-    };
+    const [desenvolvedores, setDesenvolvedores] = useState(null);
+    const [desenvolvedorDialog, setDesenvolvedorDialog] = useState(false);
+    const [deleteDesenvolvedorDialog, setDeleteDesenvolvedorDialog] = useState(false);
+    const [desenvolvedor, setDesenvolvedor] = useState<Desenvolvedor>(emptyDesenvolvedor);
+    const [niveisDisponiveis, setNiveisDisponiveis] = useState<Nivel[]>([]);
+    const [submitted, setSubmitted] = useState(false);
+    const [globalFilter, setGlobalFilter] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [totalRecords, setTotalRecords] = useState(0);
+    const toast = useRef<Toast>(null);
+    const dt = useRef<DataTable<any>>(null);
 
     useEffect(() => {
-        ProductService.getProductsSmall().then((data) => setProducts(data));
+        DesenvolvedorService.getDesenvolvedores(globalFilter, currentPage, rowsPerPage)
+            .then((response) => {
+                setDesenvolvedores(response.data);
+                setTotalRecords(response.total);
+            })
+            .catch((error) => {
+                console.log("deu ruim", error);
+            })
+    }, [globalFilter, currentPage, rowsPerPage]);
+
+    useEffect(() => {
+        NivelService.getNiveis()
+            .then((response) => {
+                setNiveisDisponiveis(response.data);
+            })
+            .catch((error) => {
+                console.log("erro ao buscar níveis", error);
+            })
     }, []);
 
-    useEffect(() => {
-        if (layoutConfig.colorScheme === 'light') {
-            applyLightTheme();
-        } else {
-            applyDarkTheme();
-        }
-    }, [layoutConfig.colorScheme]);
 
-    const formatCurrency = (value: number) => {
-        return value?.toLocaleString('en-US', {
-            style: 'currency',
-            currency: 'USD'
-        });
+    const openNew = () => {
+        setDesenvolvedor(emptyDesenvolvedor);
+        setSubmitted(false);
+        setDesenvolvedorDialog(true);
     };
 
+    const hideDialog = () => {
+        setSubmitted(false);
+        setDesenvolvedorDialog(false);
+    };
+
+    const hideDeleteNivelDialog = () => {
+        setDeleteDesenvolvedorDialog(false);
+    };
+
+    const salvarDados = () => {
+        setSubmitted(true);
+
+        if (desenvolvedor.nome.trim() && desenvolvedor.sexo && desenvolvedor.data_nascimento && desenvolvedor.nivel_id) {
+            if (desenvolvedor.id) {
+                DesenvolvedorService.updateDesenvolvedores(desenvolvedor.id,
+                    {
+                        nome: desenvolvedor.nome,
+                        sexo: desenvolvedor.sexo,
+                        data_nascimento: desenvolvedor.data_nascimento,
+                        hobby: desenvolvedor.hobby,
+                        nivel_id: desenvolvedor.nivel_id
+                    }
+                )
+                    .then(() => {
+                        toast.current?.show({
+                            severity: 'success',
+                            summary: 'Sucesso',
+                            detail: 'Desenvolvedor Atualizado',
+                            life: 3000
+                        });
+                        DesenvolvedorService.getDesenvolvedores(globalFilter, currentPage, rowsPerPage)
+                            .then((response) => {
+                                setDesenvolvedores(response.data);
+                                setTotalRecords(response.total);
+                            });
+                    });
+            } else {
+                DesenvolvedorService.createDesenvolvedores(
+                    {
+                        nome: desenvolvedor.nome,
+                        sexo: desenvolvedor.sexo,
+                        data_nascimento: desenvolvedor.data_nascimento,
+                        hobby: desenvolvedor.hobby,
+                        nivel_id: desenvolvedor.nivel_id
+                    }
+                )
+                    .then(() => {
+                        toast.current?.show({
+                            severity: 'success',
+                            summary: 'Sucesso',
+                            detail: 'Desenvolvedor Criado',
+                            life: 3000
+                        });
+                        DesenvolvedorService.getDesenvolvedores(globalFilter, currentPage, rowsPerPage)
+                            .then((response) => {
+                                setDesenvolvedores(response.data);
+                                setTotalRecords(response.total);
+                            });
+                    });
+            }
+
+            setDesenvolvedorDialog(false);
+            setDesenvolvedor(emptyDesenvolvedor);
+        }
+    };
+
+    const editDesenvolvedor = (Desenvolvedor: Desenvolvedor) => {
+        setDesenvolvedor({ ...Desenvolvedor });
+        setDesenvolvedorDialog(true);
+    };
+
+    const confirmDeleteDesenvolvedor = (Desenvolvedor: Desenvolvedor) => {
+        setDesenvolvedor(Desenvolvedor);
+        setDeleteDesenvolvedorDialog(true);
+    };
+
+    const deleteDesenvolvedores = () => {
+        DesenvolvedorService.deleteDesenvolvedores(desenvolvedor.id)
+            .then(() => {
+                let _nivels = (desenvolvedores as any)?.filter((val: any) => val.id !== desenvolvedor.id);
+                setDesenvolvedores(_nivels);
+                setDeleteDesenvolvedorDialog(false);
+                setDesenvolvedor(emptyDesenvolvedor);
+                toast.current?.show({
+                    severity: 'success',
+                    summary: 'Sucesso',
+                    detail: 'Desenvolvedor Excluido',
+                    life: 3000
+                });
+            });
+    };
+
+    const onInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, name: string) => {
+        const val = (e.target && e.target.value) || '';
+        let _desenvolvedor = { ...desenvolvedor };
+        _desenvolvedor[`${name}`] = val;
+
+        setDesenvolvedor(_desenvolvedor);
+    };
+
+    const rightToolbarTemplate = () => {
+        return (
+            <React.Fragment>
+                <div className="my-2">
+                    <Button label="Novo" icon="pi pi-plus" severity="success" className=" mr-2" onClick={openNew} />
+                </div>
+            </React.Fragment>
+        );
+    };
+
+    const dataBodyTemplate = (rowData: Desenvolvedor) => {
+        if (rowData.data_nascimento) {
+            const data = new Date(rowData.data_nascimento);
+            return data.toLocaleDateString('pt-BR');
+        }
+        return '';
+    };
+
+    const actionBodyTemplate = (rowData: Desenvolvedor) => {
+        return (
+            <>
+                <Button icon="pi pi-pencil" rounded severity="success" className="mr-2" onClick={() => editDesenvolvedor(rowData)} />
+                <Button icon="pi pi-trash" rounded severity="warning" onClick={() => confirmDeleteDesenvolvedor(rowData)} />
+            </>
+        );
+    };
+
+    const header = (
+        <div className="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
+            <span className="block mt-2 md:mt-0 p-input-icon-left">
+                <i className="pi pi-search" />
+                <InputText type="search" onInput={(e) => setGlobalFilter(e.currentTarget.value)} placeholder="Pesquisar..." />
+            </span>
+        </div>
+    );
+
+    const NivelDialogFooter = (
+        <>
+            <Button label="Cancelar" icon="pi pi-times" text onClick={hideDialog} />
+            <Button label="Salvar" icon="pi pi-check" text onClick={salvarDados} />
+        </>
+    );
+    const deleteNivelDialogFooter = (
+        <>
+            <Button label="Não" icon="pi pi-times" text onClick={hideDeleteNivelDialog} />
+            <Button label="Sim" icon="pi pi-check" text onClick={deleteDesenvolvedores} />
+        </>
+    );
+
     return (
-        <div className="grid">
-            <div className="col-12 lg:col-6 xl:col-3">
-                <div className="card mb-0">
-                    <div className="flex justify-content-between mb-3">
-                        <div>
-                            <span className="block text-500 font-medium mb-3">Orders</span>
-                            <div className="text-900 font-medium text-xl">152</div>
-                        </div>
-                        <div className="flex align-items-center justify-content-center bg-blue-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
-                            <i className="pi pi-shopping-cart text-blue-500 text-xl" />
-                        </div>
-                    </div>
-                    <span className="text-green-500 font-medium">24 new </span>
-                    <span className="text-500">since last visit</span>
-                </div>
-            </div>
-            <div className="col-12 lg:col-6 xl:col-3">
-                <div className="card mb-0">
-                    <div className="flex justify-content-between mb-3">
-                        <div>
-                            <span className="block text-500 font-medium mb-3">Revenue</span>
-                            <div className="text-900 font-medium text-xl">$2.100</div>
-                        </div>
-                        <div className="flex align-items-center justify-content-center bg-orange-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
-                            <i className="pi pi-map-marker text-orange-500 text-xl" />
-                        </div>
-                    </div>
-                    <span className="text-green-500 font-medium">%52+ </span>
-                    <span className="text-500">since last week</span>
-                </div>
-            </div>
-            <div className="col-12 lg:col-6 xl:col-3">
-                <div className="card mb-0">
-                    <div className="flex justify-content-between mb-3">
-                        <div>
-                            <span className="block text-500 font-medium mb-3">Customers</span>
-                            <div className="text-900 font-medium text-xl">28441</div>
-                        </div>
-                        <div className="flex align-items-center justify-content-center bg-cyan-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
-                            <i className="pi pi-inbox text-cyan-500 text-xl" />
-                        </div>
-                    </div>
-                    <span className="text-green-500 font-medium">520 </span>
-                    <span className="text-500">newly registered</span>
-                </div>
-            </div>
-            <div className="col-12 lg:col-6 xl:col-3">
-                <div className="card mb-0">
-                    <div className="flex justify-content-between mb-3">
-                        <div>
-                            <span className="block text-500 font-medium mb-3">Comments</span>
-                            <div className="text-900 font-medium text-xl">152 Unread</div>
-                        </div>
-                        <div className="flex align-items-center justify-content-center bg-purple-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
-                            <i className="pi pi-comment text-purple-500 text-xl" />
-                        </div>
-                    </div>
-                    <span className="text-green-500 font-medium">85 </span>
-                    <span className="text-500">responded</span>
-                </div>
-            </div>
-
-            <div className="col-12 xl:col-6">
+        <div className="grid crud-demo">
+            <div className="col-12">
                 <div className="card">
-                    <h5>Recent Sales</h5>
-                    <DataTable value={products} rows={5} paginator responsiveLayout="scroll">
-                        <Column header="Image" body={(data) => <img className="shadow-2" src={`/demo/images/product/${data.image}`} alt={data.image} width="50" />} />
-                        <Column field="name" header="Name" sortable style={{ width: '35%' }} />
-                        <Column field="price" header="Price" sortable style={{ width: '35%' }} body={(data) => formatCurrency(data.price)} />
-                        <Column
-                            header="View"
-                            style={{ width: '15%' }}
-                            body={() => (
-                                <>
-                                    <Button icon="pi pi-search" text />
-                                </>
-                            )}
-                        />
+                    <h5 className="mb-3">Desenvolvedores</h5>
+                    <Toast ref={toast} />
+                    <Toolbar className="mb-4" right={rightToolbarTemplate}></Toolbar>
+
+                    <DataTable
+                        ref={dt}
+                        value={desenvolvedores}
+                        dataKey="id"
+                        paginator
+                        rows={rowsPerPage}
+                        rowsPerPageOptions={[5, 10, 25]}
+                        totalRecords={totalRecords}
+                        lazy
+                        first={(currentPage - 1) * rowsPerPage}
+                        onPage={(e) => {setCurrentPage(e.page + 1); setRowsPerPage(e.rows);}}
+                        className="datatable-responsive"
+                        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                        currentPageReportTemplate="Mostrar {first} de {last} com {totalRecords} desenvolvedores"
+                        emptyMessage="Nenhum Desenvolvedor encontrado."
+                        header={header}
+                        responsiveLayout="stack"
+                    >
+                        <Column field="nome" header="Nome"></Column>
+                        <Column field="sexo" header="Sexo"></Column>
+                        <Column field="data_nascimento" header="Data Nascimento" body={dataBodyTemplate}></Column>
+                        <Column field="hobby" header="Hobby"></Column>
+                        <Column field="nivel.nivel" header="Nivel"></Column>
+                        <Column  field="acoes" align="right" header="Ações" bodyStyle={{ textAlign: "right"}} body={actionBodyTemplate}></Column>
                     </DataTable>
-                </div>
-                <div className="card">
-                    <div className="flex justify-content-between align-items-center mb-5">
-                        <h5>Best Selling Products</h5>
-                        <div>
-                            <Button type="button" icon="pi pi-ellipsis-v" rounded text className="p-button-plain" onClick={(event) => menu1.current?.toggle(event)} />
-                            <Menu
-                                ref={menu1}
-                                popup
-                                model={[
-                                    { label: 'Add New', icon: 'pi pi-fw pi-plus' },
-                                    { label: 'Remove', icon: 'pi pi-fw pi-minus' }
+
+                    <Dialog visible={desenvolvedorDialog} style={{ width: '450px' }} header={desenvolvedor.id ? 'Atualizar Desenvolvedor' : 'Novo Desenvolvedor'} modal className="p-fluid" footer={NivelDialogFooter} onHide={hideDialog}>
+                        <div className="field">
+                            <label htmlFor="nome">Nome</label>
+                            <InputText
+                                id="nome"
+                                value={desenvolvedor.nome}
+                                onChange={(e) => onInputChange(e, 'nome')}
+                                required
+                                autoFocus
+                                className={classNames({
+                                    'p-invalid': submitted && !desenvolvedor.nome
+                                })}
+                            />
+                            {submitted && !desenvolvedor.nome && <small className="p-invalid">Nome é obrigatório.</small>}
+                        </div>
+
+                        <div className="field">
+                            <label htmlFor="sexo">Sexo</label>
+                            <Dropdown
+                                id="sexo"
+                                value={desenvolvedor.sexo}
+                                onChange={(e) => {
+                                    let _desenvolvedor = { ...desenvolvedor };
+                                    _desenvolvedor.sexo = e.value;
+                                    setDesenvolvedor(_desenvolvedor);
+                                }}
+                                options={[
+                                    { label: 'Masculino', value: 'M' },
+                                    { label: 'Feminino', value: 'F' }
                                 ]}
+                                placeholder="Selecione o sexo"
+                                className={classNames({
+                                    'p-invalid': submitted && !desenvolvedor.sexo
+                                })}
+                            />
+                            {submitted && !desenvolvedor.sexo && <small className="p-invalid">Sexo é obrigatório.</small>}
+                        </div>
+
+                        <div className="field">
+                            <label htmlFor="data_nascimento">Data de Nascimento</label>
+                            <Calendar
+                                id="data_nascimento"
+                                value={desenvolvedor.data_nascimento ? new Date(desenvolvedor.data_nascimento) : null}
+                                onChange={(e) => {
+                                    let _desenvolvedor = { ...desenvolvedor };
+                                    _desenvolvedor.data_nascimento = e.value ? e.value.toISOString().split('T')[0] : '';
+                                    setDesenvolvedor(_desenvolvedor);
+                                }}
+                                dateFormat="dd/mm/yy"
+                                placeholder="Selecione a data"
+                                className={classNames({
+                                    'p-invalid': submitted && !desenvolvedor.data_nascimento
+                                })}
+                            />
+                            {submitted && !desenvolvedor.data_nascimento && <small className="p-invalid">Data de nascimento é obrigatória.</small>}
+                        </div>
+
+                        <div className="field">
+                            <label htmlFor="hobby">Hobby</label>
+                            <InputText
+                                id="hobby"
+                                value={desenvolvedor.hobby}
+                                onChange={(e) => onInputChange(e, 'hobby')}
+                                placeholder="Digite o hobby"
                             />
                         </div>
-                    </div>
-                    <ul className="list-none p-0 m-0">
-                        <li className="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
-                            <div>
-                                <span className="text-900 font-medium mr-2 mb-1 md:mb-0">Space T-Shirt</span>
-                                <div className="mt-1 text-600">Clothing</div>
-                            </div>
-                            <div className="mt-2 md:mt-0 flex align-items-center">
-                                <div className="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" style={{ height: '8px' }}>
-                                    <div className="bg-orange-500 h-full" style={{ width: '50%' }} />
-                                </div>
-                                <span className="text-orange-500 ml-3 font-medium">%50</span>
-                            </div>
-                        </li>
-                        <li className="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
-                            <div>
-                                <span className="text-900 font-medium mr-2 mb-1 md:mb-0">Portal Sticker</span>
-                                <div className="mt-1 text-600">Accessories</div>
-                            </div>
-                            <div className="mt-2 md:mt-0 ml-0 md:ml-8 flex align-items-center">
-                                <div className="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" style={{ height: '8px' }}>
-                                    <div className="bg-cyan-500 h-full" style={{ width: '16%' }} />
-                                </div>
-                                <span className="text-cyan-500 ml-3 font-medium">%16</span>
-                            </div>
-                        </li>
-                        <li className="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
-                            <div>
-                                <span className="text-900 font-medium mr-2 mb-1 md:mb-0">Supernova Sticker</span>
-                                <div className="mt-1 text-600">Accessories</div>
-                            </div>
-                            <div className="mt-2 md:mt-0 ml-0 md:ml-8 flex align-items-center">
-                                <div className="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" style={{ height: '8px' }}>
-                                    <div className="bg-pink-500 h-full" style={{ width: '67%' }} />
-                                </div>
-                                <span className="text-pink-500 ml-3 font-medium">%67</span>
-                            </div>
-                        </li>
-                        <li className="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
-                            <div>
-                                <span className="text-900 font-medium mr-2 mb-1 md:mb-0">Wonders Notebook</span>
-                                <div className="mt-1 text-600">Office</div>
-                            </div>
-                            <div className="mt-2 md:mt-0 ml-0 md:ml-8 flex align-items-center">
-                                <div className="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" style={{ height: '8px' }}>
-                                    <div className="bg-green-500 h-full" style={{ width: '35%' }} />
-                                </div>
-                                <span className="text-green-500 ml-3 font-medium">%35</span>
-                            </div>
-                        </li>
-                        <li className="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
-                            <div>
-                                <span className="text-900 font-medium mr-2 mb-1 md:mb-0">Mat Black Case</span>
-                                <div className="mt-1 text-600">Accessories</div>
-                            </div>
-                            <div className="mt-2 md:mt-0 ml-0 md:ml-8 flex align-items-center">
-                                <div className="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" style={{ height: '8px' }}>
-                                    <div className="bg-purple-500 h-full" style={{ width: '75%' }} />
-                                </div>
-                                <span className="text-purple-500 ml-3 font-medium">%75</span>
-                            </div>
-                        </li>
-                        <li className="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
-                            <div>
-                                <span className="text-900 font-medium mr-2 mb-1 md:mb-0">Robots T-Shirt</span>
-                                <div className="mt-1 text-600">Clothing</div>
-                            </div>
-                            <div className="mt-2 md:mt-0 ml-0 md:ml-8 flex align-items-center">
-                                <div className="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" style={{ height: '8px' }}>
-                                    <div className="bg-teal-500 h-full" style={{ width: '40%' }} />
-                                </div>
-                                <span className="text-teal-500 ml-3 font-medium">%40</span>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </div>
 
-            <div className="col-12 xl:col-6">
-                <div className="card">
-                    <h5>Sales Overview</h5>
-                    <Chart type="line" data={lineData} options={lineOptions} />
-                </div>
-
-                <div className="card">
-                    <div className="flex align-items-center justify-content-between mb-4">
-                        <h5>Notifications</h5>
-                        <div>
-                            <Button type="button" icon="pi pi-ellipsis-v" rounded text className="p-button-plain" onClick={(event) => menu2.current?.toggle(event)} />
-                            <Menu
-                                ref={menu2}
-                                popup
-                                model={[
-                                    { label: 'Add New', icon: 'pi pi-fw pi-plus' },
-                                    { label: 'Remove', icon: 'pi pi-fw pi-minus' }
-                                ]}
+                        <div className="field">
+                            <label htmlFor="nivel_id">Nível</label>
+                            <Dropdown
+                                id="nivel_id"
+                                value={desenvolvedor.nivel_id}
+                                onChange={(e) => {
+                                    let _desenvolvedor = { ...desenvolvedor };
+                                    _desenvolvedor.nivel_id = e.value;
+                                    setDesenvolvedor(_desenvolvedor);
+                                }}
+                                options={niveisDisponiveis.map(nivel => ({ label: nivel.nivel, value: nivel.id }))}
+                                placeholder="Selecione o nível"
+                                className={classNames({
+                                    'p-invalid': submitted && !desenvolvedor.nivel_id
+                                })}
                             />
+                            {submitted && !desenvolvedor.nivel_id && <small className="p-invalid">Nível é obrigatório.</small>}
                         </div>
-                    </div>
+                    </Dialog>
 
-                    <span className="block text-600 font-medium mb-3">TODAY</span>
-                    <ul className="p-0 mx-0 mt-0 mb-4 list-none">
-                        <li className="flex align-items-center py-2 border-bottom-1 surface-border">
-                            <div className="w-3rem h-3rem flex align-items-center justify-content-center bg-blue-100 border-circle mr-3 flex-shrink-0">
-                                <i className="pi pi-dollar text-xl text-blue-500" />
-                            </div>
-                            <span className="text-900 line-height-3">
-                                Richard Jones
-                                <span className="text-700">
-                                    {' '}
-                                    has purchased a blue t-shirt for <span className="text-blue-500">79$</span>
+                    <Dialog visible={deleteDesenvolvedorDialog} style={{ width: '450px' }} header="Confirmar" modal footer={deleteNivelDialogFooter} onHide={hideDeleteNivelDialog}>
+                        <div className="flex align-items-center justify-content-center">
+                            <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />
+                            {desenvolvedor && (
+                                <span>
+                                    Tem certeza que deseja deletar <b>{desenvolvedor.nome}</b>?
                                 </span>
-                            </span>
-                        </li>
-                        <li className="flex align-items-center py-2">
-                            <div className="w-3rem h-3rem flex align-items-center justify-content-center bg-orange-100 border-circle mr-3 flex-shrink-0">
-                                <i className="pi pi-download text-xl text-orange-500" />
-                            </div>
-                            <span className="text-700 line-height-3">
-                                Your request for withdrawal of <span className="text-blue-500 font-medium">2500$</span> has been initiated.
-                            </span>
-                        </li>
-                    </ul>
-
-                    <span className="block text-600 font-medium mb-3">YESTERDAY</span>
-                    <ul className="p-0 m-0 list-none">
-                        <li className="flex align-items-center py-2 border-bottom-1 surface-border">
-                            <div className="w-3rem h-3rem flex align-items-center justify-content-center bg-blue-100 border-circle mr-3 flex-shrink-0">
-                                <i className="pi pi-dollar text-xl text-blue-500" />
-                            </div>
-                            <span className="text-900 line-height-3">
-                                Keyser Wick
-                                <span className="text-700">
-                                    {' '}
-                                    has purchased a black jacket for <span className="text-blue-500">59$</span>
-                                </span>
-                            </span>
-                        </li>
-                        <li className="flex align-items-center py-2 border-bottom-1 surface-border">
-                            <div className="w-3rem h-3rem flex align-items-center justify-content-center bg-pink-100 border-circle mr-3 flex-shrink-0">
-                                <i className="pi pi-question text-xl text-pink-500" />
-                            </div>
-                            <span className="text-900 line-height-3">
-                                Jane Davis
-                                <span className="text-700"> has posted a new questions about your product.</span>
-                            </span>
-                        </li>
-                    </ul>
-                </div>
-                <div
-                    className="px-4 py-5 shadow-2 flex flex-column md:flex-row md:align-items-center justify-content-between mb-3"
-                    style={{
-                        borderRadius: '1rem',
-                        background: 'linear-gradient(0deg, rgba(0, 123, 255, 0.5), rgba(0, 123, 255, 0.5)), linear-gradient(92.54deg, #1C80CF 47.88%, #FFFFFF 100.01%)'
-                    }}
-                >
-                    <div>
-                        <div className="text-blue-100 font-medium text-xl mt-2 mb-3">TAKE THE NEXT STEP</div>
-                        <div className="text-white font-medium text-5xl">Try PrimeBlocks</div>
-                    </div>
-                    <div className="mt-4 mr-auto md:mt-0 md:mr-0">
-                        <Link href="https://blocks.primereact.org" className="p-button font-bold px-5 py-3 p-button-warning p-button-rounded p-button-raised">
-                            xangasdangas
-                        </Link>
-                    </div>
+                            )}
+                        </div>
+                    </Dialog>
                 </div>
             </div>
         </div>
     );
 };
 
-export default Dashboard;
+export default Crud;

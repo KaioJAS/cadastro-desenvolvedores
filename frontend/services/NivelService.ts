@@ -27,6 +27,12 @@ export const NivelService = {
         const response = await fetch(`${API_URL}/niveis/${id}`, {
             method: 'DELETE'
         });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Erro ao excluir nível');
+    }
+
         return response.json();
     }
 }

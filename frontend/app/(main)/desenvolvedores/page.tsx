@@ -45,7 +45,7 @@ const Crud = () => {
                 setTotalRecords(response.total);
             })
             .catch((error) => {
-                console.log("deu ruim", error);
+                console.log("Erro ao encontrar desenvolvedores", error);
             })
     }, [globalFilter, currentPage, rowsPerPage]);
 
@@ -101,6 +101,14 @@ const Crud = () => {
                                 setDesenvolvedores(response.data);
                                 setTotalRecords(response.total);
                             });
+                    })
+                    .catch((error) => {
+                        toast.current?.show({
+                            severity: 'error',
+                            summary: 'Erro',
+                            detail: error.message,
+                            life: 5000
+                        });
                     });
             } else {
                 DesenvolvedorService.createDesenvolvedores(
@@ -124,6 +132,14 @@ const Crud = () => {
                                 setDesenvolvedores(response.data);
                                 setTotalRecords(response.total);
                             });
+                    })
+                    .catch((error) => {
+                        toast.current?.show({
+                            severity: 'error',
+                            summary: 'Erro',
+                            detail: error.message,
+                            life: 5000
+                        });
                     });
             }
 
@@ -154,6 +170,15 @@ const Crud = () => {
                     summary: 'Sucesso',
                     detail: 'Desenvolvedor Excluido',
                     life: 3000
+                });
+            })
+            .catch((error) => {
+                setDeleteDesenvolvedorDialog(false);
+                toast.current?.show({
+                    severity: 'error',
+                    summary: 'Erro',
+                    detail: error.message,
+                    life: 5000
                 });
             });
     };

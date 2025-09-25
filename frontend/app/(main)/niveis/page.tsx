@@ -36,7 +36,7 @@ const Crud = () => {
                 setTotalRecords(response.total);
             })
             .catch((error) => {
-                console.log("deu ruim", error);
+                console.log("Erro ao encontrar niveis", error);
             })
     }, [globalFilter, currentPage, rowsPerPage]);
 
@@ -74,6 +74,14 @@ const Crud = () => {
                                 setNiveis(response.data);
                                 setTotalRecords(response.total);
                             });
+                    })
+                    .catch((error) => {
+                        toast.current?.show({
+                            severity: 'error',
+                            summary: 'Erro',
+                            detail: error.message,
+                            life: 5000
+                        });
                     });
             } else {
                 NivelService.createNivel({ nivel: nivel.nivel })
@@ -89,6 +97,14 @@ const Crud = () => {
                                 setNiveis(response.data);
                                 setTotalRecords(response.total);
                             });
+                    })
+                    .catch((error) => {
+                        toast.current?.show({
+                            severity: 'error',
+                            summary: 'Erro',
+                            detail: error.message,
+                            life: 5000
+                        });
                     });
             }
 
@@ -119,6 +135,15 @@ const Crud = () => {
                     summary: 'Sucesso',
                     detail: 'Nível Excluido',
                     life: 3000
+                });
+            })
+            .catch((error) => {
+                setDeleteNivelDialog(false);
+                toast.current?.show({
+                    severity: 'error',
+                    summary: 'Erro',
+                    detail: error.message,
+                    life: 5000
                 });
             });
     };

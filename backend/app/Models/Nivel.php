@@ -10,9 +10,14 @@ class Nivel extends Model
 {
     use HasFactory, SoftDeletes;
 
-    Protected $table = 'nivels';
+    protected $table = 'nivels';
 
     protected $fillable = [
         'nivel'
     ];
+
+    public function desenvolvedores()
+    {
+        return $this->hasMany(Desenvolvedor::class);
+    }
 }

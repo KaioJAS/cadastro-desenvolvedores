@@ -6,31 +6,51 @@ use App\Models\Nivel;
 
 class NivelService
 {
-    public function getListNivelService ($search = null, $perPage = 15)
+    public function getListNivelService($search = null, $perPage = 15)
     {
-        $query = Nivel::query();
-        if ($search) {
-            $query->where('nivel', 'ILIKE', '%' . $search . '%');
+        try {
+            $query = Nivel::query();
+            if ($search) {
+                $query->where('nivel', 'ILIKE', '%' . $search . '%');
+            }
+            return $query->paginate($perPage);
+        } catch (\Exception $e) {
+            throw new \Exception("Erro ao buscar niveis.");
         }
-        return $query->paginate($perPage);
     }
 
     public function createNivel($data)
     {
-        return Nivel::create($data);
+        try {
+            return Nivel::create($data);
+        } catch (\Exception $e) {
+            throw new \Exception("Erro ao criar nivel.");
+        }
     }
 
     public function updateNivel($id, $data)
     {
-        $nivel = Nivel::findOrFail($id);
-        $nivel->update($data);
-        return $nivel;
+        try {
+            $nivel = Nivel::findOrFail($id);
+            $nivel->update($data);
+            return $nivel;
+        } catch (\Exception $e) {
+            throw new \Exception("Erro ao atualizar nivel.");
+        }
     }
 
     public function deleteNivel($id)
     {
-        $nivel = Nivel::findOrFail($id);
-        $nivel->delete();
-        return $nivel;
+        try {
+            $nivel = Nivel::findOrFail($id);
+            $countDesenvolvedores = $nivel->desenvolvedores()->count();
+            if ($countDesenvolvedores > 0) {
+                throw new \Exception("Não é possível excluir este nível pois existem desenvolvedores vinculados.");
+            }
+            $nivel->delete();
+            return $nivel;
+        } catch (\Exception $e) {
+            throw $e;
+        }
     }
 }

@@ -15,26 +15,43 @@ class NivelController extends Controller
 
     public function listarNiveis(Request $request)
     {
-        $data = $request->input('search', '');
-        $perPage = $request->input('per_page', 10);
-        $response = $this->service->getListNivelService($data, $perPage);
-        return $response;
+        try {
+            $data = $request->input('search', '');
+            $perPage = $request->input('per_page', 10);
+            $response = $this->service->getListNivelService($data, $perPage);
+            return $response;
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
     }
 
     public function criarNiveis(Request $request)
     {
-        $nivel = $this->service->createNivel($request->all());
-        return response()->json($nivel, 201);
+        try {
+            $nivel = $this->service->createNivel($request->all());
+            return response()->json($nivel, 201);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
     }
+
     public function atualizarNivel(Request $request, string $id)
     {
-        $nivel = $this->service->updateNivel($id, $request->all());
-        return response()->json($nivel);
+        try {
+            $nivel = $this->service->updateNivel($id, $request->all());
+            return response()->json($nivel);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
     }
 
     public function excluirNivel(string $id)
     {
-        $this->service->deleteNivel($id);
-        return response()->json(['message' => 'Nível excluído com sucesso']);
+        try {
+            $this->service->deleteNivel($id);
+            return response()->json(['message' => 'Nível excluído com sucesso']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
     }
 }

@@ -15,26 +15,43 @@ class DesenvolvedorController extends Controller
 
     public function listarDesenvolvedores(Request $request)
     {
-        $data = $request->input('search', '');
-        $perPage = $request->input('per_page', 10);
-        $response = $this->service->getListDesenvolvedorService($data, $perPage);
-        return $response;
+        try {
+            $data = $request->input('search', '');
+            $perPage = $request->input('per_page', 10);
+            $response = $this->service->getListDesenvolvedorService($data, $perPage);
+            return $response;
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
     }
+
 
     public function criarDesenvolvedores(Request $request)
     {
-        $nivel = $this->service->createDesenvolvedor($request->all());
-        return response()->json($nivel, 201);
+        try {
+            $nivel = $this->service->createDesenvolvedor($request->all());
+            return response()->json($nivel, 201);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
     }
     public function atualizarDesenvolvedor(Request $request, string $id)
     {
-        $nivel = $this->service->updateDesenvolvedor($id, $request->all());
-        return response()->json($nivel);
+        try {
+            $nivel = $this->service->updateDesenvolvedor($id, $request->all());
+            return response()->json($nivel);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
     }
 
     public function excluirDesenvolvedor(string $id)
     {
-        $this->service->deleteDesenvolvedor($id);
-        return response()->json(['message' => 'Desenvolvedor excluído com sucesso']);
+        try {
+            $this->service->deleteDesenvolvedor($id);
+            return response()->json(['message' => 'Desenvolvedor excluído com sucesso']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
     }
 }

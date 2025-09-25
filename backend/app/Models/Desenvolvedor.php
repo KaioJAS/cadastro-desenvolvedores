@@ -19,8 +19,7 @@ class Desenvolvedor extends Model
         'data_nascimento',
         'hobby'
     ];
-    protected $casts = ['data_nascimento' => 'date', 'deleted_at' =>
-    'datetime'];
+    protected $casts = ['data_nascimento' => 'date', 'deleted_at' => 'datetime'];
 
     public function nivel()
     {

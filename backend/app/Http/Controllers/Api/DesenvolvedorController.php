@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\DesenvolvedorRequest;
 use App\Services\DesenvolvedorService;
 use Illuminate\Http\Request;
 
@@ -26,7 +27,7 @@ class DesenvolvedorController extends Controller
     }
 
 
-    public function criarDesenvolvedores(Request $request)
+    public function criarDesenvolvedores(DesenvolvedorRequest $request)
     {
         try {
             $nivel = $this->service->createDesenvolvedor($request->all());
@@ -35,7 +36,7 @@ class DesenvolvedorController extends Controller
             return response()->json(['message' => $e->getMessage()], 400);
         }
     }
-    public function atualizarDesenvolvedor(Request $request, string $id)
+    public function atualizarDesenvolvedor(DesenvolvedorRequest $request, string $id)
     {
         try {
             $nivel = $this->service->updateDesenvolvedor($id, $request->all());

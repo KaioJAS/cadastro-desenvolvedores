@@ -3,8 +3,9 @@
 namespace App\Services;
 
 use App\Models\Nivel;
+use App\Contracts\NivelInterface;
 
-class NivelService
+class NivelService implements NivelInterface
 {
     public function getListNivelService($search = null, $perPage = 15)
     {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\NivelRequest;
 use App\Services\NivelService;
 use Illuminate\Http\Request;
 
@@ -25,7 +26,7 @@ class NivelController extends Controller
         }
     }
 
-    public function criarNiveis(Request $request)
+    public function criarNiveis(NivelRequest $request)
     {
         try {
             $nivel = $this->service->createNivel($request->all());
@@ -35,7 +36,7 @@ class NivelController extends Controller
         }
     }
 
-    public function atualizarNivel(Request $request, string $id)
+    public function atualizarNivel(NivelRequest $request, string $id)
     {
         try {
             $nivel = $this->service->updateNivel($id, $request->all());

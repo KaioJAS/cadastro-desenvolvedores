@@ -3,8 +3,9 @@
 namespace App\Services;
 
 use App\Models\Desenvolvedor;
+use App\Contracts\DesenvolvedorInterface;
 
-class DesenvolvedorService
+class DesenvolvedorService implements DesenvolvedorInterface
 {
     public function getListDesenvolvedorService($search = null, $perPage = 15)
     {

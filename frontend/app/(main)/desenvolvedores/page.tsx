@@ -35,11 +35,13 @@ const Crud = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalRecords, setTotalRecords] = useState(0);
+    const [campoOrdem, setCampoOrdem] = useState('');
+    const [direcaoOrdem, setDirecaoOrdem] = useState(0);
     const toast = useRef<Toast>(null);
     const dt = useRef<DataTable<any>>(null);
 
     useEffect(() => {
-        DesenvolvedorService.getDesenvolvedores(globalFilter, currentPage, rowsPerPage)
+        DesenvolvedorService.getDesenvolvedores(globalFilter, currentPage, rowsPerPage, campoOrdem, direcaoOrdem)
             .then((response) => {
                 setDesenvolvedores(response.data);
                 setTotalRecords(response.total);
@@ -47,7 +49,7 @@ const Crud = () => {
             .catch((error) => {
                 console.log("Erro ao encontrar desenvolvedores", error);
             })
-    }, [globalFilter, currentPage, rowsPerPage]);
+    }, [globalFilter, currentPage, rowsPerPage, campoOrdem, direcaoOrdem]);
 
     useEffect(() => {
         NivelService.getNiveis()
@@ -259,6 +261,9 @@ const Crud = () => {
                         lazy
                         first={(currentPage - 1) * rowsPerPage}
                         onPage={(e) => {setCurrentPage(e.page + 1); setRowsPerPage(e.rows);}}
+                        sortField={campoOrdem}
+                        sortOrder={direcaoOrdem}
+                        onSort={(e) => {setCampoOrdem(e.sortField); setDirecaoOrdem(e.sortOrder);}}
                         className="datatable-responsive"
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                         currentPageReportTemplate="Mostrar {first} de {last} com {totalRecords} desenvolvedores"
@@ -266,11 +271,11 @@ const Crud = () => {
                         header={header}
                         responsiveLayout="stack"
                     >
-                        <Column field="nome" header="Nome"></Column>
-                        <Column field="sexo" header="Sexo"></Column>
-                        <Column field="data_nascimento" header="Data Nascimento" body={dataBodyTemplate}></Column>
-                        <Column field="hobby" header="Hobby"></Column>
-                        <Column field="nivel.nivel" header="Nivel"></Column>
+                        <Column field="nome" sortable header="Nome"></Column>
+                        <Column field="sexo" sortable header="Sexo"></Column>
+                        <Column field="data_nascimento" sortable header="Data Nascimento" body={dataBodyTemplate}></Column>
+                        <Column field="hobby" sortable header="Hobby"></Column>
+                        <Column field="nivel.nivel" sortable header="Nivel"></Column>
                         <Column  field="acoes" align="right" header="Ações" bodyStyle={{ textAlign: "right"}} body={actionBodyTemplate}></Column>
                     </DataTable>
 

@@ -21,6 +21,8 @@ const Crud = () => {
     const [nivelDialog, setNivelDialog] = useState(false);
     const [deleteNivelDialog, setDeleteNivelDialog] = useState(false);
     const [nivel, setNivel] = useState<Nivel>(emptyNivel);
+    const [campoOrdem, setCampoOrdem] = useState('');
+    const [direcaoOrdem, setDirecaoOrdem] = useState(0);
     const [submitted, setSubmitted] = useState(false);
     const [globalFilter, setGlobalFilter] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -30,7 +32,7 @@ const Crud = () => {
     const dt = useRef<DataTable<any>>(null);
 
     useEffect(() => {
-        NivelService.getNiveis(globalFilter, currentPage, rowsPerPage)
+        NivelService.getNiveis(globalFilter, currentPage, rowsPerPage, campoOrdem, direcaoOrdem)
             .then((response) => {
                 setNiveis(response.data);
                 setTotalRecords(response.total);
@@ -38,7 +40,7 @@ const Crud = () => {
             .catch((error) => {
                 console.log("Erro ao encontrar niveis", error);
             })
-    }, [globalFilter, currentPage, rowsPerPage]);
+    }, [globalFilter, currentPage, rowsPerPage, campoOrdem, direcaoOrdem]);
 
 
     const openNew = () => {
@@ -166,13 +168,17 @@ const Crud = () => {
         );
     };
 
-    const nameBodyTemplate = (rowData: Nivel) => {
+    const nivelBodyTemplate = (rowData: Nivel) => {
         return (
             <>
-                <span className="p-column-title">Name</span>
+                <span className="p-column-title">Nivel</span>
                 {rowData.nivel}
             </>
         );
+    };
+
+    const quantidadeTemplate = (rowData) => {
+        return rowData.desenvolvedores_count || 0;
     };
 
     const actionBodyTemplate = (rowData: Nivel) => {
@@ -225,6 +231,9 @@ const Crud = () => {
                         lazy
                         first={(currentPage - 1) * rowsPerPage}
                         onPage={(e) => {setCurrentPage(e.page + 1); setRowsPerPage(e.rows);}}
+                        sortField={campoOrdem}
+                        sortOrder={direcaoOrdem}
+                        onSort={(e) => {setCampoOrdem(e.sortField); setDirecaoOrdem(e.sortOrder);}}
                         className="datatable-responsive"
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                         currentPageReportTemplate="Mostrar {first} de {last} com {totalRecords} niveis"
@@ -232,8 +241,8 @@ const Crud = () => {
                         header={header}
                         responsiveLayout="stack"
                     >
-                        <Column field="id" header="ID"></Column>
-                        <Column field="nivel" header="Nível" body={nameBodyTemplate}></Column>
+                        <Column field="nivel" sortable header="Nível" body={nivelBodyTemplate}></Column>
+                        <Column field="desenvolvedores_count" sortable header="Quantidade" body={quantidadeTemplate}></Column>
                         <Column  field="acoes" align="right" header="Ações" bodyStyle={{ textAlign: "right"}} body={actionBodyTemplate}></Column>
                     </DataTable>
 

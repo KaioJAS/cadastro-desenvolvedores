@@ -7,12 +7,15 @@ use App\Contracts\NivelInterface;
 
 class NivelService implements NivelInterface
 {
-    public function getListNivelService($search = null, $perPage = 15)
+    public function getListNivelService($search = null, $perPage = 15, $campo = null, $ordem = 'asc')
     {
         try {
-            $query = Nivel::query();
+            $query = Nivel::withCount('desenvolvedores');
             if ($search) {
                 $query->where('nivel', 'ILIKE', '%' . $search . '%');
+            }
+            if ($campo) {
+                $query->orderBy($campo, $ordem);
             }
             return $query->paginate($perPage);
         } catch (\Exception $e) {

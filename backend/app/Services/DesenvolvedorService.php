@@ -7,7 +7,7 @@ use App\Contracts\DesenvolvedorInterface;
 
 class DesenvolvedorService implements DesenvolvedorInterface
 {
-    public function getListDesenvolvedorService($search = null, $perPage = 15)
+    public function getListDesenvolvedorService($search = null, $perPage = 15, $campo = null, $ordem = 'asc')
     {
         try {
             $query = Desenvolvedor::with('nivel');
@@ -19,6 +19,9 @@ class DesenvolvedorService implements DesenvolvedorInterface
                             $subQuery->where('nivel', 'ILIKE', '%' . $search . '%');
                         });
                 });
+            }
+            if ($campo) {
+                $query->orderBy($campo, $ordem);
             }
             return $query->paginate($perPage);
         } catch (\Exception $e) {

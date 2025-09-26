@@ -1,0 +1,110 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Documentação de api de gerenciamento de desenvolvedores",
+    "version": "1.0"
+  },
+  "servers": [{ "url": "http://localhost:8000/api" }],
+  "paths": {
+    "/niveis": {
+      "get": {
+        "summary": "Lista niveis",
+        "parameters": [
+          {"name": "search", "in": "query", "schema": {"type": "string"}},
+          {"name": "page", "in": "query", "schema": {"type": "integer"}},
+          {"name": "per_page", "in": "query", "schema": {"type": "integer"}}
+        ],
+        "responses": {"200": {"description": "OK"}}
+      },
+      "post": {
+        "summary": "Cria nivel",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {"type": "object", "properties": {"nivel": {"type": "string"}}}
+            }
+          }
+        },
+        "responses": {"201": {"description": "Criado"}}
+      }
+    },
+    "/niveis/{id}": {
+      "put": {
+        "summary": "Atualiza nivel",
+        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {"type": "object", "properties": {"nivel": {"type": "string"}}}
+            }
+          }
+        },
+        "responses": {"200": {"description": "OK"}}
+      },
+      "delete": {
+        "summary": "Deleta nivel",
+        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+        "responses": {"200": {"description": "OK"}}
+      }
+    },
+    "/desenvolvedor": {
+      "get": {
+        "summary": "Lista desenvolvedores",
+        "parameters": [
+          {"name": "search", "in": "query", "schema": {"type": "string"}},
+          {"name": "page", "in": "query", "schema": {"type": "integer"}},
+          {"name": "per_page", "in": "query", "schema": {"type": "integer"}}
+        ],
+        "responses": {"200": {"description": "OK"}}
+      },
+      "post": {
+        "summary": "Cria desenvolvedor",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nome": {"type": "string"},
+                  "sexo": {"type": "string"},
+                  "data_nascimento": {"type": "string"},
+                  "hobby": {"type": "string"},
+                  "nivel_id": {"type": "integer"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {"201": {"description": "Criado"}}
+      }
+    },
+    "/desenvolvedor/{id}": {
+      "put": {
+        "summary": "Atualiza desenvolvedor",
+        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nome": {"type": "string"},
+                  "sexo": {"type": "string"},
+                  "data_nascimento": {"type": "string"},
+                  "hobby": {"type": "string"},
+                  "nivel_id": {"type": "integer"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {"200": {"description": "OK"}}
+      },
+      "delete": {
+        "summary": "Deleta desenvolvedor",
+        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+        "responses": {"200": {"description": "OK"}}
+      }
+    }
+  }
+}

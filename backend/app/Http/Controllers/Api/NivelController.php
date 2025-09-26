@@ -19,7 +19,9 @@ class NivelController extends Controller
         try {
             $data = $request->input('search', '');
             $perPage = $request->input('per_page', 10);
-            $response = $this->service->getListNivelService($data, $perPage);
+            $campo = $request->input('campo', '');
+            $ordem = $request->input('ordem', 'asc');
+            $response = $this->service->getListNivelService($data, $perPage, $campo, $ordem);
             return $response;
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
